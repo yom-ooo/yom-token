@@ -1,0 +1,58 @@
+{
+    "name": "YOM",
+    "logoURI": "https://yom.mypinata.cloud/ipfs/QmQ9qE5XWMEyzQGWJFcZjwjigHBzSWDaaf2xFhCFqdvUcx",
+    "keywords": ["YOM", "cloud gaming", "DePIN", "gaming", "GPU sharing", "metaverse", "peer-to-peer", "AI inference", "cloud rendering", "blockchain infrastructure", "web3 gaming", "gaming infrastructure", "peaq", "Solana", "nodes", "decentralized cloud", "staking", "compute", "networking", "VR", "XR", "AR"],
+    "timestamp": "2025-02-11T10:15:48Z",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "tokens": [
+      {
+        "chainId": 9990,
+        "address": "0x33366c0959ebB47B41C6c02Eb3aD893A261Ce09E",
+        "symbol": "YOM",
+        "name": "YOM",
+        "decimals": 18,
+        "logoURI": "https://yom.mypinata.cloud/ipfs/QmQ9qE5XWMEyzQGWJFcZjwjigHBzSWDaaf2xFhCFqdvUcx",
+        "tags": ["gaming", "DePIN", "peaq", "staking", "metaverse", "networking", "compute"],
+        "extensions": {
+          "coingeckoId": "your-open-metaverse",
+          "website": "https://www.yom.ooo",
+          "twitter": "https://x.com/YOM_Official"
+        }
+      }
+    ],
+    "tags": {
+        "gaming": {
+          "name": "Gaming",
+          "description": "Tokens related to blockchain gaming, play-to-earn mechanics, and metaverse ecosystems."
+        },
+        "DePIN": {
+          "name": "DePIN",
+          "description": "Decentralized Physical Infrastructure Networks (DePIN) enabling distributed computing, GPU sharing, and edge computing."
+        },
+        "peaq": {
+          "name": "peaq Ecosystem",
+          "description": "Tokens that are part of the peaq decentralized cloud network."
+        },
+        "staking": {
+          "name": "Staking",
+          "description": "Tokens supporting staking mechanisms for securing networks and earning rewards."
+        },
+        "metaverse": {
+            "name": "Metaverse",
+            "description": "Projects building virtual worlds, XR experiences, and blockchain-integrated digital spaces."
+          },
+        "networking": {
+          "name": "Networking",
+          "description": "Infrastructure tokens supporting decentralized networks and peer-to-peer computing."
+        },
+        "compute": {
+          "name": "Compute",
+          "description": "Tokens facilitating distributed computing, cloud rendering, and GPU-based processing."
+        }
+      }
+  }
+  
