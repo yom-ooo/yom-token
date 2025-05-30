@@ -27,7 +27,7 @@ async function main() {
   
   // Set your desired vanity prefix.
   // For example, if you want the address to start with "0x666", then:
-  const desiredPrefix = "0x333";
+  const desiredPrefix = "0x666";
   
   // Get the deployer signer and define the desired owner.
   const [deployer] = await ethers.getSigners();

@@ -1,11 +1,33 @@
 {
+  "name": "yom-token",
+  "version": "1.0.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat lz:deploy --network peaq",
+    "wire": "hardhat lz:oapp:wire --oapp-config layerzero.config.ts",
+    "test": "hardhat test"
+  },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@types/dotenv": "^8.2.3",
-    "hardhat": "^2.22.18"
+    "@layerzerolabs/devtools-evm-hardhat": "2.0.9",
+    "@layerzerolabs/lz-definitions": "3.0.98",
+    "@layerzerolabs/lz-evm-messagelib-v2": "^3.0.99",
+    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.99",
+    "@layerzerolabs/oapp-evm": "^0.3.2",
+    "@layerzerolabs/oft-evm": "^3.1.4",
+    "@layerzerolabs/solidity-examples": "^1.1.0",
+    "@layerzerolabs/toolbox-hardhat": "0.6.9",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "2.0.3",
+    "@types/node": "^20.9.0",
+    "chai": "4.3.10",
+    "dotenv": "16.4.7",
+    "ethers": "5.8.0",
+    "hardhat": "^2.24.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.2.0",
-    "dotenv": "^16.4.7"
+    "@openzeppelin/contracts": "5.3.0",
+    "@openzeppelin/contracts-upgradeable": "5.3.0"
   }
 }
