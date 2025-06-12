@@ -21,30 +21,3 @@ A deterministic deployment factory (`contracts/Factory.sol`) and Hardhat scripts
 ```bash
 npx hardhat run scripts/deploy.ts --network <network>
 ```
-
-## Viewing Tax Information
-
-The token keeps separate counters for buy and sell taxes. Public view functions provide insights:
-
-- `totalTaxCollected()` – total tokens collected from both taxes.
-- `getTaxBreakdown()` – returns buy tax, sell tax and the combined total.
-- `isTaxExempt(address)` – check if an address is excluded from tax.
-
-## Do You Need Token‑Level Taxes?
-
-Uniswap v3 pools already charge trading fees. These fees stay inside the pool and are distributed to LPs. The tax logic in `YOM.sol` applies at the token level and is independent of any DEX. 
-
-**Pros of having built‑in taxes**
-
-- Works across all AMM pairs and transfers, not just on Uniswap.
-- Revenue goes directly to your `feeCollector`, rather than remaining in a pool.
-- Buy vs. sell taxation can be customised.
-
-**Cons**
-
-- Some wallets and DeFi protocols do not handle transfer‑fee tokens gracefully.
-- Slightly higher gas cost for transfers.
-- Relies on admin functions to manage AMM pairs and tax‑exempt addresses.
-
-If your goal is to capture revenue from all on‑chain trading (including other DEXs or cross‑chain bridges), token‑level taxes make sense. If you only need fees on a single Uniswap pool, the native pool fee might be sufficient and keeps your token fully standard.
-
