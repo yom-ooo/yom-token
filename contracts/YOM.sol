@@ -12,22 +12,25 @@ import {Ownable}         from "@openzeppelin/contracts/access/Ownable.sol";
 
 /* ── LayerZero OFT V2 ── */
 import {OFT}             from "@layerzerolabs/oft-evm/contracts/OFT.sol";
+import {IOAppComposer}   from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces/IOAppComposer.sol";
+import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTComposeMsgCodec.sol";
 
 /**
- * ███  YOM – Omnichain ERC-20  ███
+ * ███  YOM – Omnichain ERC-20 with Compose Support  ███
  *
  * • 2 % buy / 3 % sell tax (LP-only) routed to feeCollector  
- * • LayerZero OFT bridge (v3.1.x)  
+ * • LayerZero OFT bridge (v3.1.x) with compose message support
  * • OZ 5 extensions: Burnable, Permit (EIP-2612), Pausable  
  * • Freeze list, tax-exempt list, bulk admin helpers, rescue utils  
  * • MEV protection and gas optimizations
+ * • Full LayerZero compose message support via IOAppComposer
  */
 contract YOM is
     OFT,                // ← first - resolves ERC20/Context once
     ERC20Burnable,
     ERC20Permit,
-    Pausable
-{
+    Pausable,
+    IOAppComposer       
     using SafeERC20 for IERC20;
 
     /* ── constants ── */
@@ -44,6 +47,9 @@ contract YOM is
     uint128 public totalBuyTaxCollected;  // 16 bytes - tracks buy tax separately
     uint128 public totalSellTaxCollected; // 16 bytes - tracks sell tax separately
 
+    address public composeHandler;      // Optional external compose handler
+    bool public composeEnabled = true;  // Global compose enable/disable
+
     mapping(address => bool) public ammPairs;
     mapping(address => bool) public isExcluded;
     mapping(address => bool) public isFrozen;
@@ -59,6 +65,9 @@ contract YOM is
     error BatchTooLarge();
     error ZeroAmount();
     error CooldownActive();
+    error ComposeDisabled();
+    error InvalidEndpoint();
+    error InvalidOApp();
 
     /* ── events ── */
     event TaxRatesUpdated(uint256 buyBps, uint256 sellBps);
@@ -69,6 +78,27 @@ contract YOM is
     event RescueERC20(address indexed token, address indexed to, uint256 amount);
     event RescueETH(address indexed to, uint256 amount);
     event TaxCollected(address indexed from, uint256 amount, bool isBuy);
+    
+    event ComposeReceived(
+        address indexed oApp, 
+        bytes32 indexed guid, 
+        uint256 amountLD,
+        bytes composeMsg
+    );
+    event ComposeHandlerUpdated(address indexed prev, address indexed curr);
+    event ComposeEnabledUpdated(bool enabled);
+    event ComposeHandled(
+        address indexed handler,
+        address indexed oApp,
+        bytes32 indexed guid,
+        bool success
+    );
+    event ComposeHandlerFailed(
+        address indexed handler,
+        address indexed oApp,
+        bytes32 indexed guid,
+        string reason
+    );
 
     /* ── constructor ── */
     constructor(
@@ -94,6 +124,51 @@ contract YOM is
         if (delegate != address(0) && delegate != initialOwner) {
             isExcluded[delegate] = true;
         }
+    }
+
+    /**
+     * @dev Handles LayerZero compose messages
+     * @param _oApp The address of the originating OApp
+     * @param _guid The globally unique identifier of the message
+     * @param _message The encoded message content
+     * @param _executor Executor address
+     * @param _extraData Additional data for checking
+     */
+    function lzCompose(
+        address _oApp,
+        bytes32 _guid,
+        bytes calldata _message,
+        address _executor,
+        bytes calldata _extraData
+    ) external payable override {
+        // Security checks
+        if (msg.sender != endpoint.endpoint()) revert InvalidEndpoint();
+        if (!composeEnabled) revert ComposeDisabled();
+        
+        // Decode the compose message using LayerZero's codec
+        uint256 amountLD = OFTComposeMsgCodec.amountLD(_message);
+        bytes memory composeMsg = OFTComposeMsgCodec.composeMsg(_message);
+        
+        // Emit event for tracking
+        emit ComposeReceived(_oApp, _guid, amountLD, composeMsg);
+        
+        // If external compose handler is set, delegate to it
+        if (composeHandler != address(0)) {
+            // Forward the compose call to the designated handler
+            try IOAppComposer(composeHandler).lzCompose(
+                _oApp, 
+                _guid, 
+                _message, 
+                _executor, 
+                _extraData
+            ) {
+                emit ComposeHandled(composeHandler, _oApp, _guid, true);
+            } catch Error(string memory reason) {
+                emit ComposeHandlerFailed(composeHandler, _oApp, _guid, reason);
+            } catch (bytes memory) {
+                emit ComposeHandlerFailed(composeHandler, _oApp, _guid, "Unknown error");
+            }
+        }        
     }
 
     /* ── tax + freeze + pause with MEV protection ── */
@@ -150,6 +225,24 @@ contract YOM is
         }
         
         super._update(from, to, amount);
+    }
+    
+    /**
+     * @dev Sets the external compose handler contract
+     * @param newHandler Address of the new compose handler (can be zero to disable)
+     */
+    function setComposeHandler(address newHandler) external onlyOwner {
+        emit ComposeHandlerUpdated(composeHandler, newHandler);
+        composeHandler = newHandler;
+    }
+    
+    /**
+     * @dev Enables or disables compose message handling
+     * @param enabled Whether compose messages should be processed
+     */
+    function setComposeEnabled(bool enabled) external onlyOwner {
+        composeEnabled = enabled;
+        emit ComposeEnabledUpdated(enabled);
     }
 
     /* ── owner controls with DOS protection ── */
@@ -274,5 +367,13 @@ contract YOM is
         buyTax = totalBuyTaxCollected;
         sellTax = totalSellTaxCollected;
         total = uint256(buyTax) + uint256(sellTax);
+    }
+
+    function isComposeEnabled() external view returns (bool) {
+        return composeEnabled;
+    }
+    
+    function getComposeHandler() external view returns (address) {
+        return composeHandler;
     }
 }
