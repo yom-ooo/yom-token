@@ -16,7 +16,7 @@ import {IOAppComposer}   from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces
 import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTComposeMsgCodec.sol";
 
 /**
- * ███  YOM – Omnichain ERC-20 with Compose Support  ███
+ * ███  YOMTN – Omnichain ERC-20 with Compose Support  ███
  *
  * • 2 % buy / 3 % sell tax (LP-only) routed to feeCollector  
  * • LayerZero OFT bridge (v3.1.x) with compose message support
@@ -25,7 +25,7 @@ import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTCompo
  * • MEV protection and gas optimizations
  * • Full LayerZero compose message support via IOAppComposer
  */
-contract YOM is
+contract YOMTN is
     OFT,                // ← first - resolves ERC20/Context once
     ERC20Burnable,
     ERC20Permit,
@@ -59,7 +59,7 @@ contract YOM is
     error Frozen(address account);
     error ZeroAddress();
     error TaxTooHigh();
-    error CannotRescueYOM();
+    error CannotRescueYOMTN();
     error EthTransferFail();
     error TokenPaused();
     error BatchTooLarge();
@@ -106,13 +106,13 @@ contract YOM is
         address lzEndpoint,    // LayerZero endpoint
         address delegate       // LayerZero OFT delegate (can be same as owner)
     )
-        OFT("YOM", "YOM", lzEndpoint, delegate)
-        ERC20Permit("YOM")
+        OFT("YOMTN", "YOMTN", lzEndpoint, delegate)
+        ERC20Permit("YOMTN")
         Ownable(initialOwner)
     {
         if (initialOwner == address(0)) revert ZeroAddress();
         
-        _mint(initialOwner, 300_000_000 ether);   // 300 M YOM
+        _mint(initialOwner, 300_000_000 ether);   // 300 M YOMTN
 
         feeCollector              = initialOwner;
         isExcluded[initialOwner]  = true;
@@ -325,7 +325,7 @@ contract YOM is
 
     /* ── rescue with SafeERC20 ── */
     function rescueERC20(address token, uint256 amt, address to) external onlyOwner {
-        if (token == address(this)) revert CannotRescueYOM();
+        if (token == address(this)) revert CannotRescueYOMTN();
         if (to == address(0)) revert ZeroAddress();
         
         IERC20(token).safeTransfer(to, amt);
