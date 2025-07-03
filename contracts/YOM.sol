@@ -25,7 +25,7 @@ import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTCompo
  * • MEV protection and gas optimizations
  * • Full LayerZero compose message support via IOAppComposer
  */
-contract YOMTN is
+contract YOMTN {
     OFT,                // ← first - resolves ERC20/Context once
     ERC20Burnable,
     ERC20Permit,
