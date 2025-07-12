@@ -16,7 +16,7 @@ import {IOAppComposer}   from "@layerzerolabs/oapp-evm/contracts/oapp/interfaces
 import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTComposeMsgCodec.sol";
 
 /**
- * ███  YOMTN – Omnichain ERC-20 with Compose Support  ███
+ * ███  YOM – Omnichain ERC-20 with Compose Support  ███
  *
  * • 2 % buy / 3 % sell tax (LP-only) routed to feeCollector  
  * • LayerZero OFT bridge (v3.1.x) with compose message support
@@ -25,12 +25,12 @@ import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTCompo
  * • MEV protection and gas optimizations
  * • Full LayerZero compose message support via IOAppComposer
  */
-contract YOMTN {
-    OFT,                // ← first - resolves ERC20/Context once
+contract YOM is 
+    OFT,
     ERC20Burnable,
     ERC20Permit,
     Pausable,
-    IOAppComposer       
+    IOAppComposer {
     using SafeERC20 for IERC20;
 
     /* ── constants ── */
@@ -59,7 +59,7 @@ contract YOMTN {
     error Frozen(address account);
     error ZeroAddress();
     error TaxTooHigh();
-    error CannotRescueYOMTN();
+    error CannotRescueYOM();
     error EthTransferFail();
     error TokenPaused();
     error BatchTooLarge();
@@ -106,13 +106,13 @@ contract YOMTN {
         address lzEndpoint,    // LayerZero endpoint
         address delegate       // LayerZero OFT delegate (can be same as owner)
     )
-        OFT("YOMTN", "YOMTN", lzEndpoint, delegate)
-        ERC20Permit("YOMTN")
+        OFT("YOM", "YOM", lzEndpoint, delegate)
+        ERC20Permit("YOM")
         Ownable(initialOwner)
     {
         if (initialOwner == address(0)) revert ZeroAddress();
         
-        _mint(initialOwner, 300_000_000 ether);   // 300 M YOMTN
+        _mint(initialOwner, 300_000_000 ether);   // 300 M YOM
 
         feeCollector              = initialOwner;
         isExcluded[initialOwner]  = true;
@@ -142,7 +142,7 @@ contract YOMTN {
         bytes calldata _extraData
     ) external payable override {
         // Security checks
-        if (msg.sender != endpoint.endpoint()) revert InvalidEndpoint();
+        if (msg.sender != address(endpoint)) revert InvalidEndpoint();
         if (!composeEnabled) revert ComposeDisabled();
         
         // Decode the compose message using LayerZero's codec
@@ -174,7 +174,7 @@ contract YOMTN {
     /* ── tax + freeze + pause with MEV protection ── */
     function _update(address from, address to, uint256 amount)
         internal
-        override
+        override(ERC20)
     {
         // Early return for zero amount transfers
         if (amount == 0) return;
@@ -325,7 +325,7 @@ contract YOMTN {
 
     /* ── rescue with SafeERC20 ── */
     function rescueERC20(address token, uint256 amt, address to) external onlyOwner {
-        if (token == address(this)) revert CannotRescueYOMTN();
+        if (token == address(this)) revert CannotRescueYOM();
         if (to == address(0)) revert ZeroAddress();
         
         IERC20(token).safeTransfer(to, amt);

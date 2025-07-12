@@ -1,0 +1,9 @@
+{
+  "network": "localhost",
+  "yomToken": "0x2EA331ce5c474941b648351098d741EC4a21371B",
+  "factory": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "lzEndpoint": "0x0000000000000000000000000000000000000001",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "salt": "0x2c8c657a2d1712990b1927e436bbedb9a60f4119461172a2c3c606ff72a52352",
+  "timestamp": "2025-07-12T15:00:56.075Z"
+}

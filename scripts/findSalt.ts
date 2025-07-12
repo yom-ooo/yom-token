@@ -9,10 +9,10 @@ import { ethers } from "hardhat";
  */
 function computeCreate2Address(factoryAddress: string, salt: string, bytecode: string): string {
   // Compute the hash of the creation bytecode.
-  const bytecodeHash = ethers.keccak256(bytecode);
+  const bytecodeHash = ethers.utils.keccak256(bytecode);
   
   // Pack the inputs per the CREATE2 spec: 0xff, factoryAddress, salt, bytecodeHash.
-  const packed = ethers.solidityPackedKeccak256(
+  const packed = ethers.utils.solidityKeccak256(
     ["bytes1", "address", "bytes32", "bytes32"],
     ["0xff", factoryAddress, salt, bytecodeHash]
   );
@@ -22,16 +22,27 @@ function computeCreate2Address(factoryAddress: string, salt: string, bytecode: s
 }
 
 async function main() {
-  const FACTORY = "0x157fe708955dF00062fF332e8Bf2252Dfe184075";
+  // Use YOUR deployed factory address!
+  const FACTORY = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   const desiredPrefix = "0x666";
 
   const [deployer] = await ethers.getSigners();
   const initialOwner = deployer.address;
-  const lzEndpoint   = "0xYourPeaqEndpoint";   // same as deploy.ts
-  const delegate     = deployer.address;
+  
+  // Voor localhost gebruiken we een dummy endpoint address
+  // Dit moet EXACT hetzelfde zijn als wat je in deploy.ts gaat gebruiken!
+  const lzEndpoint = "0x0000000000000000000000000000000000000001"; // Dummy address
+  const delegate = deployer.address;
+
+  console.log("Factory Address:", FACTORY);
+  console.log("Initial Owner:", initialOwner);
+  console.log("LZ Endpoint:", lzEndpoint);
+  console.log("Delegate:", delegate);
+  console.log("Searching for prefix:", desiredPrefix);
+  console.log("");
 
   const YOM = await ethers.getContractFactory("YOM");
-  const tx: any = await YOM.getDeployTransaction(
+  const tx = YOM.getDeployTransaction(
        initialOwner,
        lzEndpoint,
        delegate
@@ -39,6 +50,7 @@ async function main() {
   const bytecode = tx.data as string;
 
   console.log("Full creation bytecode length:", bytecode.length);
+  console.log("Starting search...\n");
   
   let foundSalt: string | null = null;
   const maxAttempts = 1_000_000; // Adjust as needed
@@ -46,7 +58,7 @@ async function main() {
   // Brute-force possible salts.
   for (let i = 0; i < maxAttempts; i++) {
     // Generate a salt by hashing the string representation of i.
-    const salt = ethers.keccak256(ethers.toUtf8Bytes(i.toString()));
+    const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(i.toString()));
     
     // Compute the expected address using the factory address, salt, and full creation bytecode.
     const computedAddress = computeCreate2Address(FACTORY, salt, bytecode);
@@ -54,19 +66,22 @@ async function main() {
     // Check if the computed address has the desired prefix.
     if (computedAddress.toLowerCase().startsWith(desiredPrefix)) {
       foundSalt = salt;
-      console.log(`Found matching vanity address: ${computedAddress}`);
+      console.log(`\n✅ Found matching vanity address!`);
+      console.log(`Address: ${computedAddress}`);
       console.log(`Salt: ${salt}`);
+      console.log(`\nTo deploy with this address, run:`);
+      console.log(`SALT=${salt} npx hardhat run scripts/deploy.ts --network localhost`);
       break;
     }
     
     // Log progress every 10,000 attempts.
-    if (i % 10000 === 0) {
-      console.log(`Attempt ${i}... computedAddress=${computedAddress}`);
+    if (i % 10000 === 0 && i > 0) {
+      console.log(`Attempt ${i}... last computed: ${computedAddress}`);
     }
   }
   
   if (!foundSalt) {
-    console.log("No matching salt found in range.");
+    console.log("\n❌ No matching salt found in range. Try increasing maxAttempts or using a shorter prefix.");
   }
 }
 
